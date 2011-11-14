@@ -69,22 +69,33 @@ local function typemap(path)
     return map
 end
 
--- Returns a table of enumeration names -> enumeration values taken from both
--- given files.
-local function enum(path, extpath)
-    local enums = {}
+local function parse_enums(path, extpath, version, whitelist)
+    local enums, drop = {}, false
 
     local patterns = {
-        -- Ignore everything but standard assignment. Somewhat simplified but
-        -- everything ends up in the global scope anyway and there's imo small
-        -- benefit in being able to remove deprecated enumerations.
-        -- TODO: Changed mind about this, add support for dropping unwanted
-        --       sets of enumerations.
         ['(%S+)%s*=%s*(%S+)'] = function(symbol, value)
+            if drop then return end
+
             -- Expand references here as the hash table being unordered will
             -- otherwise muddle everything up.
             value = value:gsub('GL_', '')
             enums[symbol] = enums[value] or value
+        end;
+
+        ['^(%S+) enum:'] = function(name)
+            if whitelist[name] then
+                drop = false
+                return
+            end
+
+            drop = true
+
+            local major, minor, dep = name:match('VERSION_(%d)_(%d)_?(.*)')
+            if major == nil then return end
+
+            if dep ~= 'DEPRECATED' and (major * 10 + minor <= version) then
+                drop = false
+            end
         end;
     }
 
@@ -94,10 +105,8 @@ local function enum(path, extpath)
     return enums
 end
 
-local function gl(path, tm_path, version)
+local function parse_funcs(path, tm, version, whitelist)
     local functions = {}, current_function, current_name
-
-    local tm = typemap(tm_path)
 
     local patterns = {
         ['^(%w+)%(.*%)'] = function(name)
@@ -137,6 +146,12 @@ local function gl(path, tm_path, version)
         ['^\talias%s+(%S+)'] = function(as)
             current_function.alias = as
         end;
+
+        ['^\tcategory%s+(%S+)'] = function(name)
+            if not name:find('VERSION') and not whitelist[name] then
+                current_name = nil
+            end
+        end;
     }
 
     basic_parser(path, patterns)
@@ -144,7 +159,17 @@ local function gl(path, tm_path, version)
     return functions
 end
 
+local function gl(path, tm_path, enum_path, enumext_path, version, whitelist)
+    whitelist = whitelist or {}
+
+    local tm = typemap(tm_path)
+
+    return {
+        enums = parse_enums(enum_path, enumext_path, version, whitelist);
+        funcs = parse_funcs(path, tm, version, whitelist);
+    }
+end
+
 return {
-    enum = enum;
     gl = gl;
 }

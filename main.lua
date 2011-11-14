@@ -39,18 +39,23 @@ local function append_file(path)
     end
 end
 
-local enums = parser.enum('registry/enum.spec', 'registry/enumext.spec')
-local functions = parser.gl('registry/gl.spec', 'registry/gl.tm', GL_VERSION)
+local glspec = parser.gl(
+    'registry/gl.spec',
+    'registry/gl.tm',
+    'registry/enum.spec',
+    'registry/enumext.spec',
+    GL_VERSION
+)
 
 append_file('ffi_header.tmpl.lua')
 
 append('enum {\n')
-for name, value in pairs(enums) do
+for name, value in pairs(glspec.enums) do
     append('GL_' .. name .. ' = ' .. value .. ',\n')
 end
 append('};\n')
 
-for name, data in pairs(functions) do
+for name, data in pairs(glspec.funcs) do
     append(data.return_type .. ' gl' .. name .. '(')
     local count = #data.params
     for i = 1, count do
