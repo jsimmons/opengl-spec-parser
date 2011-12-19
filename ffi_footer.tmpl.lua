@@ -1,3 +1,0 @@
-]]
-
-return ffi.load('GL')

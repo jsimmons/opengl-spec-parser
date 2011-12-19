@@ -93,6 +93,7 @@ local function parse_enums(path, extpath, version, whitelist)
             local major, minor, dep = name:match('VERSION_(%d)_(%d)_?(.*)')
             if major == nil then return end
 
+            -- Drop all deprecated items for now.
             if dep ~= 'DEPRECATED' and (major * 10 + minor <= version) then
                 drop = false
             end
@@ -148,6 +149,8 @@ local function parse_funcs(path, tm, version, whitelist)
         end;
 
         ['^\tcategory%s+(%S+)'] = function(name)
+            -- Use the version information from the version specifier to save
+            -- duplication.
             if not name:find('VERSION') and not whitelist[name] then
                 current_name = nil
             end
