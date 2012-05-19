@@ -112,6 +112,7 @@ local function parse_funcs(path, tm, version, whitelist)
     local patterns = {
         ['^(%w+)%(.*%)'] = function(name)
             -- Store the last function if finished
+            print(current_name)
             if current_name then functions[current_name] = current_function end
 
             current_name = name
@@ -162,17 +163,31 @@ local function parse_funcs(path, tm, version, whitelist)
     return functions
 end
 
-local function gl(path, tm_path, enum_path, enumext_path, version, whitelist)
+local function gl(base, version, whitelist)
     whitelist = whitelist or {}
 
-    local tm = typemap(tm_path)
+    local tm = typemap(base .. 'gl.tm')
 
     return {
-        enums = parse_enums(enum_path, enumext_path, version, whitelist);
-        funcs = parse_funcs(path, tm, version, whitelist);
+        enums = parse_enums(base .. 'glenum.spec', base .. 'glenumext.spec',
+                version, whitelist);
+        funcs = parse_funcs(base .. 'gl.spec', tm, version, whitelist);
+    }
+end
+
+local function glx(base, version, whitelist)
+    whitelist = whitelist or {}
+
+    local tm = typemap(base .. 'glx.tm')
+
+    return {
+        enums = parse_enums(base .. 'glxenum.spec', base .. 'glxenumext.spec',
+                version, whitelist);
+        funcs = parse_funcs(base .. 'glx.spec', tm, version, whitelist);
     }
 end
 
 return {
     gl = gl;
+    glx = glx;
 }

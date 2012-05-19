@@ -24,19 +24,20 @@ THE SOFTWARE.
 
 local target, version = ...
 
-version = tonumber(version)
-
-if not target or not version then
-    io.stderr:write 'usage: glgen <target> <gl version>\n'
+if not target and version then
+    io.stderr:write 'usage: glgen <target> <spec version>\n'
     return
 end
 
+local spec, version = version:match "(%a+)(%d+)"
+version = tonumber(version)
+
 local generator = require 'generator'
 
-local output, err = generator.generate(target, version)
+local output, err = generator.generate(spec, version, target)
 if output == nil then
     io.stderr:write('error generating: ' .. err .. '\n')
     return
 end
 
-io.stdout:write(output)
+-- io.stdout:write(output)

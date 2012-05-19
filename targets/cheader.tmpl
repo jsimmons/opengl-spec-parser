@@ -1,0 +1,69 @@
+#ifndef GL_SPEC_PARSE_H
+#define GL_SPEC_PARSE_H
+
+#include <stdint.h>
+
+typedef unsigned int GLenum;
+typedef unsigned char GLboolean;
+typedef unsigned int GLbitfield;
+typedef signed char GLbyte;
+typedef short GLshort;
+typedef int GLint;
+typedef int GLsizei;
+typedef unsigned char GLubyte;
+typedef unsigned short GLushort;
+typedef unsigned int GLuint;
+typedef float GLfloat;
+typedef float GLclampf;
+typedef double GLdouble;
+typedef double GLclampd;
+typedef void GLvoid;
+typedef ptrdiff_t GLintptr;
+typedef ptrdiff_t GLsizeiptr;
+typedef char GLchar;
+typedef char GLcharARB;
+typedef void *GLhandleARB;
+typedef long GLintptrARB;
+typedef long GLsizeiptrARB;
+typedef unsigned short GLhalfARB;
+typedef unsigned short GLhalfNV;
+typedef unsigned short GLhalf;
+typedef int64_t GLint64;
+typedef int64_t GLint64EXT;
+typedef uint64_t GLuint64;
+typedef uint64_t GLuint64EXT;
+typedef GLintptr GLvdpauSurfaceNV;
+typedef struct __GLsync *GLsync;
+
+enum {
+{{ for name, value in pairs(spec.enums) do }}
+    GL_{{=name}} = {{=value}},
+{{ end }}
+};
+
+{{
+for name, data in pairs(spec.funcs) do
+    echo(data.return_type .. ' gl' .. name .. '(')
+    local count = #data.params
+    for i = 1, count do
+        local param = data.params[i]
+
+        if param.dir == 'in' and param.mode ~= 'value' then
+            echo('const ')
+        end
+
+        echo(param.type .. ((param.mode == 'value') and '' or '*'))
+
+        if param.mode ~= 'value' then
+            echo('*')
+        end
+
+        if i < count then
+            echo ", "
+        end
+    end
+    echo ");\n"
+end
+}}
+
+#endif
