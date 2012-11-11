@@ -3,6 +3,12 @@ gl-spec-parser
 
 A parser for OpenGL spec files that supports templated output.
 
+Note
+----
+
+If you're interested in this you'll probably be more interested in [glloadgen](https://bitbucket.org/alfonse/glloadgen)
+which is a far more complete take on the same basic idea.
+
 Usage
 -----
 
